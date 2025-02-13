@@ -45,8 +45,8 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 | **A**   | View **Previous** job                                     |
 | **D**   | View **Next** job                                         |
 | **S**   | **Toggle Shortlist** (Adds or removes job from favorites) |
-| **Q**   | **Open Posting** in a **new tab**                         |
-| **W**   | **Apply** to the job                                      |
+| **W**   | **Open Posting** in a **new tab**                         |
+| **Q**   | **Apply** to the job                                      |
 | **ESC** | **Close** the modal                                       |
 
 ## 🖱️ How to Use
