@@ -58,7 +58,6 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 5. **Drag and drop sections** inside the modal to reorder job details in the way that makes the most sense to you.
 6. **Collapse sections** you don’t need to keep things clean.
 
-📌 **Pro Tip:** If a job title is too long, it will **auto-truncate with an ellipsis (****`...`****)**, but the **magnifying glass icon will always remain visible** for easy access.
 
 ## 🎯 What It Should Look Like
 
