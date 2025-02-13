@@ -17,7 +17,7 @@ window.favouriteStates = localStorage.getItem('favouriteStates')
   ? JSON.parse(localStorage.getItem('favouriteStates'))
   : {};
 
-// If you want to avoid refetching the same posting repeatedly, you can use this:
+
 let loadedPostingId = null;
 
 var rowCollapsedStates = {};
@@ -50,10 +50,7 @@ function applyButtonStyles(btn, options = {}) {
   });
 }
 
-/**
- * Helper: Refresh job links and attach "open modal" icons
- * (Adopts the second snippet's approach for nicer styling).
- */
+
 function refreshJobLinksAndAttachIcons() {
   let jobLinks = Array.from(document.querySelectorAll('a[class^="np-view-btn-"]'));
   console.log("Refreshed jobLinks:", jobLinks.length);
@@ -136,9 +133,7 @@ function refreshJobLinksAndAttachIcons() {
   return jobLinks;
 }
 
-/**
- * Wait for orbisAppSr to be available in the page before proceeding
- */
+
 function waitForOrbis(callback) {
   if (window.orbisAppSr && typeof window.orbisAppSr.buildForm === 'function') {
     console.log("orbisAppSr is available in page context.");
@@ -149,9 +144,7 @@ function waitForOrbis(callback) {
   }
 }
 
-/**
- * fetchJobPostingHTML - helper to fetch the entire posting HTML via form submission
- */
+
 function fetchJobPostingHTML(params) {
   return new Promise((resolve, reject) => {
     let actionUrl = window.location.href;
@@ -186,10 +179,7 @@ function fetchJobPostingHTML(params) {
   });
 }
 
-/**
- * extractDashboardHeader - example utility if needed for specialized "Apply" logic
- * (You can adapt this if your "apply" logic relies on #tabMyApplication or #otherApplication.)
- */
+
 function extractDashboardHeader(html) {
   let parser = new DOMParser();
   let doc = parser.parseFromString(html, 'text/html');
@@ -203,10 +193,7 @@ function extractDashboardHeader(html) {
   return dashboardHeader;
 }
 
-/**
- * processJobHTML - merges the original reorder/collapse logic from the FIRST script
- * with the simpler approach of returning a container from the SECOND script.
- */
+
 function processJobHTML(html) {
   // Reload rowOrder from localStorage
   window.globalRowOrder = localStorage.getItem('globalRowOrder')
@@ -243,9 +230,7 @@ function processJobHTML(html) {
   // Clone the content so we can reorder
   let postingClone = postingDiv.cloneNode(true);
 
-  // -------------------------------
-  // *** REORDER & COLLAPSE LOGIC ***
-  // -------------------------------
+
   let panels = postingClone.querySelectorAll('.panel.panel-default');
   panels.forEach(panel => {
     let heading = panel.querySelector('.panel-heading');
@@ -533,7 +518,7 @@ waitForOrbis(() => {
 
   document.body.appendChild(modal);
 
-  // Expose openModal globally so we can call window.openModal(index).
+  // Expose openModal globally so I can call window.openModal(index).
   window.openModal = function(startIndex) {
     jobLinks = refreshJobLinksAndAttachIcons();
     currentIndex = startIndex;
@@ -601,7 +586,7 @@ waitForOrbis(() => {
     modal.style.display = 'none';
   });
 
-  // Keyboard shortcuts (matching the second snippet's approach)
+
   document.addEventListener('keydown', (e) => {
     if (modal.style.display === 'block') {
       // Prevent arrow keys from scrolling the page
@@ -626,7 +611,7 @@ waitForOrbis(() => {
     }
   });
 
-  // "Open posting" - direct buildForm to _BLANK
+
   openPostingBtn.addEventListener('click', () => {
     let link = jobLinks[currentIndex];
     let params = link.dataset.postingParams ? JSON.parse(link.dataset.postingParams) : null;
@@ -729,7 +714,7 @@ waitForOrbis(() => {
     return false;
   }
 
-  // Optionally, add a floating button to open the navigator at index=0
+
   const openModalBtn = document.createElement('button');
   openModalBtn.innerText = 'Open Job Navigator';
   applyButtonStyles(openModalBtn);
