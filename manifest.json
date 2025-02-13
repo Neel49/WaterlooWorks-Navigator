@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WaterlooWorks Job Navigator",
   "version": "0.1",
-  "description": "Cycle through job postings and display details (extracted from #postingDiv) in a modal.",
+  "description": "Cycle through job postings and display details in a modal.",
   "permissions": ["activeTab", "scripting"],
   "content_scripts": [
     {
