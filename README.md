@@ -62,7 +62,8 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 
 ## 🎯 What It Should Look Like
 
-![Waterloo Works Job Navigator Screenshot]\(screenshot\_1.png)
+![Waterloo Works Job Navigator Screenshot](./images/screenshot_1.png)
+
 
 ## 🛠️ Troubleshooting
 
