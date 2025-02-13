@@ -62,7 +62,7 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 
 ## 🎯 What It Should Look Like
 
-<img src="./screenshot_1.png" alt="Waterloo Works Job Navigator Screenshot" width="1280" />
+<img src="./Screenshot_1.png" alt="Waterloo Works Job Navigator Screenshot" width="1280" />
 
 
 
