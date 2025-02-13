@@ -147,19 +147,19 @@ function waitForOrbis(callback) {
 
 function fetchJobPostingHTML(params) {
   return new Promise((resolve, reject) => {
-    let actionUrl = window.location.href;
-    let formEl = document.createElement('form');
+    const actionUrl = window.location.href;
+    const formEl = document.createElement('form');
     formEl.action = actionUrl;
 
     for (let key in params) {
-      let input = document.createElement('input');
+      const input = document.createElement('input');
       input.type = 'hidden';
       input.name = key;
       input.value = params[key];
       formEl.appendChild(input);
     }
 
-    let formData = new FormData(formEl);
+    const formData = new FormData(formEl);
 
     fetch(actionUrl, {
       method: 'POST',
@@ -168,8 +168,9 @@ function fetchJobPostingHTML(params) {
     })
     .then(resp => resp.arrayBuffer())
     .then(buffer => {
-      let decoder = new TextDecoder('utf-8');
-      let html = decoder.decode(buffer);
+      // Use Windows-1252 decoder to handle special characters like é.
+      const decoder = new TextDecoder('windows-1252');
+      const html = decoder.decode(buffer);
       resolve(html);
     })
     .catch(err => {
