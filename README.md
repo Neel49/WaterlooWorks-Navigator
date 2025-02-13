@@ -45,8 +45,8 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 | **A**   | View **Previous** job                                     |
 | **D**   | View **Next** job                                         |
 | **S**   | **Toggle Shortlist** (Adds or removes job from favorites) |
-| **Q**   | **Open Posting** in a **new tab**                         |
-| **W**   | **Apply** to the job                                      |
+| **W**   | **Open Posting** in a **new tab**                         |
+| **Q**   | **Apply** to the job                                      |
 | **ESC** | **Close** the modal                                       |
 
 ## 🖱️ How to Use
@@ -62,7 +62,7 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 
 ## 🎯 What It Should Look Like
 
-<img src="./screenshot_1.png" alt="Waterloo Works Job Navigator Screenshot" width="1280" />
+<img src="./Screenshot_1.png" alt="Waterloo Works Job Navigator Screenshot" width="1280" />
 
 
 
