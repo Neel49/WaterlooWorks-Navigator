@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "WaterlooWorks Job Naviator",
+  "version": "0.1",
+  "description": "Cycle through job postings and display details (extracted from #postingDiv) in a modal.",
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": [
+    {
+      "matches": ["https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://waterlooworks.uwaterloo.ca/*"]
+    }
+  ]
+}
+
