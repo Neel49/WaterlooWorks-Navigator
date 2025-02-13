@@ -228,7 +228,7 @@ function processJobHTML(html) {
     return container;
   }
 
-  // Clone the content so we can reorder
+  // Clone the content so I can reorder
   let postingClone = postingDiv.cloneNode(true);
 
 
@@ -310,7 +310,7 @@ function processJobHTML(html) {
           }
         });
 
-        // Reorder rows if we have a stored order for this table
+        // Reorder rows if I have a stored order for this table
         if (window.globalRowOrder[tableKey]) {
           let storedOrder = window.globalRowOrder[tableKey];
           let rows = Array.from(tbody.children);
