@@ -11,7 +11,6 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 ✅ **Job Modal Viewer** – View job details in a **pop-up modal** without leaving the job list.\
 ✅ **Keyboard Shortcuts** – Navigate jobs using **WASD + Q** controls.\
 ✅ **Shortlist Toggle** – Quickly add or remove jobs from your shortlist.\
-✅ **One-Click Apply** – Apply directly from the modal without reloading the page.\
 ✅ **Customizable Layout** – Collapse and reorder job details as needed.\
 ✅ **Persistent Data** – Keeps track of favorite jobs and viewed job listings.
 
