@@ -12,7 +12,6 @@ This is an improved version of the features found in **WaterlooWorks Azure**, bu
 ✅ **Keyboard Shortcuts** – Navigate jobs using **WASD + Q** controls.\
 ✅ **Shortlist Toggle** – Quickly add or remove jobs from your shortlist.\
 ✅ **Customizable Layout** – Collapse and reorder job details as needed.\
-✅ **Persistent Data** – Keeps track of favorite jobs and viewed job listings.
 
 ## 📥 Installation Guide
 
