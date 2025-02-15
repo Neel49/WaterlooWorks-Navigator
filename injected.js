@@ -1,4 +1,3 @@
-console.log = function () {};
 
 console.log("Injected Combined Job Navigator script loaded in page context.");
 
@@ -194,6 +193,25 @@ function extractDashboardHeader(html) {
   return dashboardHeader;
 }
 
+async function setNextPage() {
+  const paginationList = document.querySelector(".orbis-posting-actions .pagination.pagination ul");
+  const paginationBtns = paginationList?.querySelectorAll("li");
+  if (paginationList) {
+    const nextPageBtn = paginationBtns[paginationBtns.length - 2].querySelector("a");
+    nextPageBtn.click();
+  }
+  return new Promise(resolve => setTimeout(resolve, 300));
+}
+
+async function setPreviousPage() {
+  const paginationList = document.querySelector(".orbis-posting-actions .pagination.pagination ul");
+  const paginationBtns = paginationList?.querySelectorAll("li");
+  if (paginationList) {
+    const prevPageBtn = paginationBtns[1].querySelector("a");
+    prevPageBtn.click();
+  }
+  return new Promise(resolve => setTimeout(resolve, 300));
+}
 
 function processJobHTML(html) {
   // Reload rowOrder from localStorage
@@ -572,19 +590,30 @@ waitForOrbis(() => {
   nextBtn.addEventListener('click', () => {
     savedScroll = modal.scrollTop;
     currentIndex++;
-    if (currentIndex >= jobLinks.length) currentIndex = 0;
-    loadJobPosting(currentIndex, savedScroll);
+    if (currentIndex == jobLinks.length) {
+      setNextPage().then(() => {
+        jobLinks = refreshJobLinksAndAttachIcons();
+        currentIndex = 0;
+        loadJobPosting(currentIndex, savedScroll)
+      })
+    } else loadJobPosting(currentIndex, savedScroll);
   });
 
   prevBtn.addEventListener('click', () => {
     savedScroll = modal.scrollTop;
     currentIndex--;
-    if (currentIndex < 0) currentIndex = jobLinks.length - 1;
-    loadJobPosting(currentIndex, savedScroll);
+    if (currentIndex < 0) {
+      setPreviousPage().then(() => {
+        jobLinks = refreshJobLinksAndAttachIcons();
+        currentIndex = jobLinks.length - 1;
+        loadJobPosting(currentIndex, savedScroll);
+      })
+    } else loadJobPosting(currentIndex, savedScroll);
   });
 
   closeBtn.addEventListener('click', () => {
     modal.style.display = 'none';
+    refreshJobLinksAndAttachIcons();
   });
 
 
