@@ -1,22 +1,14 @@
 {
   "manifest_version": 3,
   "name": "WaterlooWorks Job Navigator",
-  "version": "0.1",
-  "description": "Cycle through job postings and display details in a modal.",
-  "permissions": ["activeTab", "scripting"],
+  "version": "32.0",
+  "description": "Navigate job postings with arrow keys and shortlist jobs on WaterlooWorks",
+  "permissions": ["activeTab"],
   "content_scripts": [
     {
-      "matches": ["https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm*"],
+      "matches": ["https://waterlooworks.uwaterloo.ca/*"],
       "js": ["content.js"],
-      "run_at": "document_end"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["injected.js"],
-      "matches": ["https://waterlooworks.uwaterloo.ca/*"]
+      "run_at": "document_idle"
     }
   ]
 }
-
-   

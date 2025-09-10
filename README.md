@@ -1,83 +1,134 @@
-# Waterloo Works Job Navigator
+# WaterlooWorks Job Navigator (v15.1 - Restored Compact Layout)
 
-## Overview
-
-This Chrome extension enhances Waterloo Works job browsing by adding a **modal-based job navigator**, **keyboard shortcuts**, and **easy job application access**.
-
-This is an improved version of the features found in **WaterlooWorks Azure**, but **better**. You can **collapse different sections, drag and drop them around**, and reorder job details so you can scroll through in the order you prefer.
+An enhanced Chrome extension that adds keyboard navigation and UI improvements to WaterlooWorks job postings. **Now with instant loading - no more flash of unstyled content!**
 
 ## Features
 
-✅ **Job Modal Viewer** – View job details in a **pop-up modal** without leaving the job list.\
-✅ **Keyboard Shortcuts** – Navigate jobs using **WASD + Q** controls.\
-✅ **Shortlist Toggle** – Quickly add or remove jobs from your shortlist.\
-✅ **Customizable Layout** – Collapse and reorder job details as needed.
-
-## 📥 Installation Guide
-
-### **Step 1: Download the Extension Files**
-
-1. Go to the **GitHub repository** (provide the actual repo link here).
-2. **Click the green "Code" button**, then select **"Download ZIP"** to download the extension files.
-3. **Extract** the ZIP file to a folder on your computer.
-
-### **Step 2: Enable Developer Mode in Chrome**
-
-1. Open **Google Chrome**.
-2. In the address bar, type **`chrome://extensions/`** and press Enter.
-3. In the **top-right corner**, turn on **Developer Mode**.
-
-### **Step 3: Load the Extension**
-
-1. Click **Load unpacked** (top-left).
-2. Navigate to the folder where you extracted the extension.
-3. Select the folder and **click OK**.
-4. The extension should now appear in your list of installed extensions.
-
-> **⚠️ I have submitted the extension for approval on the Chrome Web Store, but it takes a little while to get approved. Until then, this is the only way to use it.**
-
-## 🎮 Navigation Commands (WASD + Q)
-
-| Key     | Action                                                    |
-| ------- | --------------------------------------------------------- |
-| **A**   | View **Previous** job                                     |
-| **D**   | View **Next** job                                         |
-| **S**   | **Toggle Shortlist** (Adds or removes job from favorites) |
-| **W**   | **Open Posting** in a **new tab**                         |
-| **Q**   | **Apply** to the job                                      |
-| **ESC** | **Close** the modal                                       |
-
-## 🖱️ How to Use
-
-1. **Open Waterloo Works** and go to the **Jobs Page**.
-2. Click the **"Open Job Navigator"** button in the **bottom-right corner**.
-3. Use **WASD + Q** to navigate between jobs in the modal.
-4. Alternatively, **click the 🔍 magnifying glass** next to any job title to open it directly.
-5. **Drag and drop sections** inside the modal to reorder job details in the way that makes the most sense to you.
-6. **Collapse sections** you don’t need to keep things clean.
 
 
-## 🎯 What It Should Look Like
+### 🎯 Arrow Key Navigation
+- **Left Arrow (←)**: Go to the **PREVIOUS** job posting
+- **Right Arrow (→)**: Go to the **NEXT** job posting
+- **Escape**: Close the modal
+- Navigation wraps around (last job → first job and vice versa)
 
-<img src="./Screenshot_1.png" alt="Waterloo Works Job Navigator Screenshot" width="1280" />
+### 📋 Enhanced Modal UI
+- **Reorderable Sections**: Drag and drop sections to reorder them
+- **Collapsible Sections**: Click the arrow icon to collapse/expand sections
+- **Persistent Preferences**: Your section order and collapsed states are saved
+- **Consistent Experience**: Settings apply to all job postings
 
+### 🎨 User Interface
+- **Floating Button**: Purple button in bottom-right corner to open first job
+- **Status Indicator**: Shows current position (e.g., "Job 3 of 25") in top-right
+- **Clean Design**: Modern, intuitive interface with smooth animations
 
+## What it should look like
 
-## 🛠️ Troubleshooting
+![WaterlooWorks Navigator Screenshot](Screenshot_1.png)
 
-- **Can’t see the "Open Job Navigator" button?** Refresh the page.
-- **Jobs not opening in the modal?** Ensure the extension is loaded correctly in **chrome://extensions/**.
-- **Magnifying glass icon not showing?** Zoom out or adjust browser window size.
-- **Shortlist not saving?** Try **clearing cache** or **reinstalling the extension**.
+## Installation
 
-## 🏗️ Contributing & Feedback
+1. **Download/Clone this folder** to your computer
 
-If you run into any **errors or bugs**, please **open an issue** or let me know!\
-If this extension **helped you**, please **star the repo** ⭐️ on GitHub!
+2. **Open Chrome** and navigate to:
+   ```
+   chrome://extensions/
+   ```
 
----
+3. **Enable Developer Mode** (toggle in the top-right corner)
 
-## 📜 License
+4. **Remove any old version** if present
 
-This project is open-source under the **MIT License**.
+5. **Click "Load unpacked"**
 
+6. **Select this folder** containing the extension files
+
+7. The extension is now installed and active!
+
+## How to Use
+
+### Basic Navigation
+
+1. **Go to WaterlooWorks** job search page:
+   ```
+   https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm
+   ```
+
+2. **Click the purple button** in the bottom-right corner to open the first job
+   - Or click any job title in the table
+
+3. **Navigate with arrow keys**:
+   - **Left Arrow (←)**: Previous job
+   - **Right Arrow (→)**: Next job
+   - **Escape**: Close the modal
+
+### Customizing the Modal
+
+When a job modal is open, you can:
+
+1. **Reorder Sections**:
+   - Click and drag the ☰ icon next to any section title
+   - Drop it in your preferred position
+   - Your order is saved automatically
+
+2. **Collapse/Expand Sections**:
+   - Click the ▼/▶ arrow on the right of each section
+   - Collapsed state is remembered across all jobs
+
+3. **Your preferences persist**:
+   - Close and reopen jobs - your layout is preserved
+   - Works across different browser sessions
+   - Same layout applies to all job postings
+
+## Customization Tips
+
+- **Prioritize Important Info**: Drag sections like "Compensation" or "Required Skills" to the top
+- **Hide Less Important Sections**: Collapse sections you rarely need to see
+- **Create Your Ideal Layout**: Arrange sections in the order that makes most sense for your job search
+
+## Troubleshooting
+
+If the extension doesn't work:
+
+1. **Refresh the page** (F5) after installing
+
+2. **Check you're on the right page** - Must be on the WaterlooWorks job search results
+
+3. **Clear localStorage** if you want to reset preferences:
+   - Open DevTools (F12)
+   - Go to Console
+   - Type: `localStorage.removeItem('ww-navigator-prefs')`
+   - Press Enter
+
+4. **Check the console** for errors:
+   - Press F12 → Console tab
+   - Look for "WaterlooWorks Navigator" messages
+
+5. **Reload the extension**:
+   - Go to `chrome://extensions/`
+   - Click the refresh icon on the extension
+
+## Files
+
+- `manifest.json` - Extension configuration
+- `content.js` - Main logic (navigation, UI enhancements, drag-drop, persistence)
+- `README.md` - This documentation
+
+## Version History
+
+- **3.0** - Major enhancement update
+  - Added drag-and-drop section reordering
+  - Added collapsible sections with persistence
+  - Fixed arrow key directions (Left = Previous, Right = Next)
+  - Improved modal enhancement system
+  - Added localStorage for preferences
+  - Added wrap-around navigation
+
+## Privacy
+
+This extension:
+- Only runs on WaterlooWorks pages
+- Stores preferences locally in your browser (localStorage)
+- Does not send any data to external servers
+- Does not track your activity
