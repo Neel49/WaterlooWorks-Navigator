@@ -21,17 +21,18 @@ Chrome extension that adds keyboard navigation and UI improvements to WaterlooWo
 
 ## Installation
 
-1. **In WaterlooWorks**: Create a folder called "shortlist" in your My Jobs section
 
-2. **Download this folder** to your computer
+1. **Download this folder** to your computer
 
-3. **Open Chrome** and go to `chrome://extensions/`
+2. **Open Chrome** and go to `chrome://extensions/`
 
-4. **Enable Developer Mode** (top-right toggle)
+3. **Enable Developer Mode** (top-right toggle)
 
-5. **Click "Load unpacked"** and select this folder
+4. **Click "Load unpacked"** and select this folder
+   
+6. **In WaterlooWorks**: Create a folder called "shortlist" in your My Jobs section
 
-6. Done!
+7. Done!
 
 ## How to Use
 
