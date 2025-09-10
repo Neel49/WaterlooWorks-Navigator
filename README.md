@@ -7,7 +7,7 @@ Chrome extension that adds keyboard navigation and UI improvements to WaterlooWo
 - **Arrow Keys / WASD Navigation**:
   - Left/A: Previous job
   - Right/D: Next job
-  - Up/W: Shortlist job
+  - Up/W: Toggle Shortlist/Unshortlist job
   - Escape: Close modal
 
 - **Enhanced UI**:
