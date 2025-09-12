@@ -177,7 +177,11 @@ function getAllJobLinks() {
   jobLinks = Array.from(links);
   console.log(`Total job links found: ${jobLinks.length}`);
   
-  // Add stars to each table row
+  // Clear ALL existing stars first (prevents duplicates on pagination)
+  document.querySelectorAll('.ww-row-star').forEach(star => star.remove());
+  console.log('Cleared all existing stars');
+  
+  // Add fresh stars to each table row
   links.forEach((link, index) => {
     const row = link.closest('tr');
     if (row) {
@@ -193,15 +197,15 @@ function getAllJobLinks() {
 
 // Add a star indicator to a table row
 function addStarToTableRow(row) {
-  // Don't add if already exists
-  if (row.querySelector('.ww-row-star')) {
-    console.log('Star already exists in row');
-    return;
-  }
-  
   const jobId = getJobIdFromRow(row);
   if (!jobId) {
     console.log('No job ID found for row');
+    return;
+  }
+  
+  // Check if star already exists for this specific job ID
+  if (row.querySelector(`.ww-row-star[data-job-id="${jobId}"]`)) {
+    console.log(`Star already exists for job ${jobId}`);
     return;
   }
   
@@ -227,6 +231,7 @@ function addStarToTableRow(row) {
   // Create star button with inline styles to ensure visibility
   const star = document.createElement('span');
   star.className = 'ww-row-star';
+  star.setAttribute('data-job-id', jobId);  // Add job ID as data attribute
   star.innerHTML = isShortlisted ? '⭐' : '☆';
   star.title = isShortlisted ? 'Remove from shortlist' : 'Add to shortlist';
   
@@ -288,10 +293,11 @@ function addStarToTableRow(row) {
 function updateTableRowStars() {
   const rows = document.querySelectorAll('tbody[data-v-612a1958] tr');
   rows.forEach(row => {
-    const star = row.querySelector('.ww-row-star');
-    if (star) {
-      const jobId = getJobIdFromRow(row);
-      if (jobId) {
+    const jobId = getJobIdFromRow(row);
+    if (jobId) {
+      // Find the star for this specific job ID
+      const star = row.querySelector(`.ww-row-star[data-job-id="${jobId}"]`);
+      if (star) {
         const isShortlisted = shortlistedJobs.has(jobId);
         star.innerHTML = isShortlisted ? '⭐' : '☆';
         star.title = isShortlisted ? 'Remove from shortlist' : 'Add to shortlist';
@@ -820,7 +826,7 @@ function updateShortlistIndicator() {
       starButton.style.cssText = `
         position: absolute;
         top: 12px;
-        right: 300px;
+        right: 500px;
         background: ${isShortlisted ? 'linear-gradient(135deg, #ffd700, #ffed4e)' : 'white'};
         color: ${isShortlisted ? '#333' : '#999'};
         border: ${isShortlisted ? '2px solid #ffd700' : '2px solid #ddd'};
@@ -3001,7 +3007,7 @@ function createToggleUI() {
 
 // Initialize
 function initialize() {
-  console.log("Initializing WaterlooWorks Navigator v47.1...");
+  console.log("Initializing WaterlooWorks Navigator v47.2...");
   
   try {
     // CRITICAL: Inject CSS immediately to prevent FOUC
@@ -3186,29 +3192,54 @@ function setupTableObserver() {
   }
   
   const observer = new MutationObserver((mutations) => {
-    // IMMEDIATE star addition for any new rows
+    // Check if this is a major table update (like pagination)
+    let hasRemovedRows = false;
+    let hasAddedRows = false;
+    
     mutations.forEach(mutation => {
       if (mutation.type === 'childList') {
+        // Check for removed rows
+        mutation.removedNodes.forEach(node => {
+          if (node.nodeType === 1 && (node.tagName === 'TR' || node.querySelector?.('tr'))) {
+            hasRemovedRows = true;
+          }
+        });
+        // Check for added rows
         mutation.addedNodes.forEach(node => {
-          if (node.nodeType === 1) { // Element node
-            // If it's a row, add star immediately
-            if (node.tagName === 'TR') {
-              addStarToTableRow(node);
-            }
-            // If it contains rows, add stars to all of them
-            const rows = node.querySelectorAll ? node.querySelectorAll('tr') : [];
-            rows.forEach(row => addStarToTableRow(row));
+          if (node.nodeType === 1 && (node.tagName === 'TR' || node.querySelector?.('tr'))) {
+            hasAddedRows = true;
           }
         });
       }
     });
     
-    // Also do a full refresh (debounced) to catch any missed rows
-    clearTimeout(window.tableUpdateTimeout);
-    window.tableUpdateTimeout = setTimeout(() => {
-      getAllJobLinks();
-      console.log('Table fully refreshed');
-    }, 50); // Reduced delay
+    // If we have both removed and added rows, it's likely a page change
+    if (hasRemovedRows && hasAddedRows) {
+      console.log('Table page change detected - refreshing all stars');
+      // Do a full refresh which will clear old stars and add new ones
+      clearTimeout(window.tableUpdateTimeout);
+      window.tableUpdateTimeout = setTimeout(() => {
+        getAllJobLinks();
+        console.log('Table fully refreshed after page change');
+      }, 50);
+    } else if (hasAddedRows && !hasRemovedRows) {
+      // Just new rows added (like loading more), add stars only to new rows
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { // Element node
+              // If it's a row, add star immediately
+              if (node.tagName === 'TR') {
+                addStarToTableRow(node);
+              }
+              // If it contains rows, add stars to all of them
+              const rows = node.querySelectorAll ? node.querySelectorAll('tr') : [];
+              rows.forEach(row => addStarToTableRow(row));
+            }
+          });
+        }
+      });
+    }
   });
   
   observer.observe(tableContainer, {
@@ -3354,6 +3385,6 @@ if (document.readyState === 'loading') {
   setTimeout(initialize, 100);
 }
 
-console.log("WaterlooWorks Navigator v47.1 loaded!");
+console.log("WaterlooWorks Navigator v47.2 loaded!");
 
 })(); // End of IIFE
