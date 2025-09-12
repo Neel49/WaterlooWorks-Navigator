@@ -1,7 +1,19 @@
-console.log("WaterlooWorks Navigator - Loading extension v43.0 (Complete Content Fix)...");
+// Wrap everything in an IIFE to avoid global scope pollution
+(function() {
+  'use strict';
+  
+  console.log("WaterlooWorks Navigator - Loading extension v47.1 (Button Position Adjusted)...");
+  console.log("Current URL:", window.location.href);
+  
+  // Verify we're on WaterlooWorks
+  if (!window.location.href.includes('waterlooworks.uwaterloo.ca')) {
+    console.warn('Not on WaterlooWorks site, extension will not activate');
+    return; // Exit early if not on WaterlooWorks
+  }
+  console.log('✓ On WaterlooWorks site, extension activating...');
 
 /**
- * SHORTLIST FEATURE v43:
+ * SHORTLIST FEATURE v47.1:
  * Stars appear in BOTH the job listing table AND modal views!
  * 
  * How it works:
@@ -34,6 +46,8 @@ let modalObserver = null;
 let shortlistedJobs = new Set();
 // Track the ACTUAL job ID when a modal is opened
 let currentModalJobId = null;
+// Track if UI enhancements are enabled (default: true)
+let uiEnhancementsEnabled = true;
 
 // Load saved preferences
 function loadPreferences() {
@@ -93,6 +107,13 @@ function loadPreferences() {
         saveShortlist();
       }
     }
+    
+    // Load UI enhancement preference
+    const uiEnabled = localStorage.getItem('ww-navigator-ui-enabled');
+    if (uiEnabled !== null) {
+      uiEnhancementsEnabled = uiEnabled === 'true';
+      console.log(`UI Enhancements: ${uiEnhancementsEnabled ? 'Enabled' : 'Disabled'}`);
+    }
   } catch (e) {
     console.error('Error loading preferences:', e);
   }
@@ -118,30 +139,43 @@ function savePreferences() {
 
 // Get all job links and add stars to table rows
 function getAllJobLinks() {
-  // Try multiple selectors to find job links
-  let links = document.querySelectorAll('tbody[data-v-612a1958] a[href="javascript:void(0)"].overflow--ellipsis');
+  console.log('Getting all job links...');
   
-  // Fallback: Try without the data-v attribute
-  if (links.length === 0) {
-    console.log('Primary selector failed, trying fallback...');
-    links = document.querySelectorAll('tbody a.overflow--ellipsis');
+  // Try multiple selectors - WaterlooWorks uses Vue.js with dynamic attributes
+  const selectors = [
+    // Primary selectors
+    'tbody tr a.overflow--ellipsis',
+    'tbody[data-v-612a1958] a',
+    '.table__row--body a[href="javascript:void(0)"]',
+    // Fallback selectors
+    'table tbody a[onclick]',
+    'tr.table__row--body a',
+    '.dashboard-table tbody a',
+    // Last resort
+    'tbody a'
+  ];
+  
+  let links = [];
+  for (const selector of selectors) {
+    const found = document.querySelectorAll(selector);
+    if (found.length > 0) {
+      console.log(`Found ${found.length} links with selector: "${selector}"`);
+      links = found;
+      break;
+    }
   }
   
-  // Another fallback: Any links in table rows
   if (links.length === 0) {
-    console.log('Secondary selector failed, trying broader search...');
-    links = document.querySelectorAll('tr a[href*="javascript"]');
+    console.error('ERROR: No job links found with any selector!');
+    console.log('Debug info:');
+    console.log('- Tables found:', document.querySelectorAll('table').length);
+    console.log('- Tbody found:', document.querySelectorAll('tbody').length);
+    console.log('- All links:', document.querySelectorAll('a').length);
+    console.log('- Sample HTML:', document.querySelector('tbody')?.innerHTML?.substring(0, 200));
   }
   
   jobLinks = Array.from(links);
-  console.log(`Found ${jobLinks.length} job postings`);
-  
-  if (jobLinks.length === 0) {
-    console.error('ERROR: No job links found! Page structure may have changed.');
-    console.log('Available tables:', document.querySelectorAll('table').length);
-    console.log('Available tbody:', document.querySelectorAll('tbody').length);
-    console.log('Available links:', document.querySelectorAll('a').length);
-  }
+  console.log(`Total job links found: ${jobLinks.length}`);
   
   // Add stars to each table row
   links.forEach((link, index) => {
@@ -209,6 +243,7 @@ function addStarToTableRow(row) {
   `;
   
   star.addEventListener('click', async (e) => {
+    console.log(`Star clicked for job ${jobId}`);
     e.preventDefault();
     e.stopPropagation();
     
@@ -339,6 +374,16 @@ function saveShortlist() {
     console.log(`Saved ${shortlistedJobs.size} shortlisted jobs to localStorage`);
   } catch (e) {
     console.error('Error saving shortlist:', e);
+  }
+}
+
+// Save UI enhancement preference
+function saveUIPreference() {
+  try {
+    localStorage.setItem('ww-navigator-ui-enabled', uiEnhancementsEnabled.toString());
+    console.log(`Saved UI Enhancement preference: ${uiEnhancementsEnabled}`);
+  } catch (e) {
+    console.error('Error saving UI preference:', e);
   }
 }
 
@@ -826,8 +871,19 @@ function updateShortlistIndicator() {
   if (existingInlineStar) existingInlineStar.remove();
 }
 
-// Pre-hide modal to prevent FOUC
+// Pre-hide modal to prevent FOUC (ONLY if UI enhancements are enabled)
 function preHideModal() {
+  // CRITICAL: Only hide modal if UI enhancements are ON
+  if (!uiEnhancementsEnabled) {
+    // Remove any existing hide styles if UI enhancements are OFF
+    const existingStyle = document.getElementById('ww-prehide-style');
+    if (existingStyle) {
+      existingStyle.remove();
+      console.log('Removed modal hiding styles - UI enhancements OFF');
+    }
+    return;
+  }
+  
   const style = document.getElementById('ww-prehide-style');
   if (!style) {
     const hideStyle = document.createElement('style');
@@ -1765,7 +1821,13 @@ function setupPanelDrag(panelElement, dragHandle) {
 
 // Main enhancement function
 function enhanceModal() {
-  console.log('Starting modal enhancement v43...');
+  // Check if UI enhancements are enabled
+  if (!uiEnhancementsEnabled) {
+    console.log('UI enhancements disabled, skipping modal enhancement');
+    return;
+  }
+  
+  console.log('Starting modal enhancement v47.1...');
   
   // CRITICAL: Only enhance OVERVIEW tab to avoid breaking other tabs
   const activeTab = document.querySelector('.nav-tabs .active, [role="tab"][aria-selected="true"]');
@@ -2399,7 +2461,7 @@ function enhanceModal() {
   if (tabPanel) {
     setTimeout(() => {
       tabPanel.classList.add('ww-ready');
-    }, 25);
+    }, 10);
   }
   
   // Update shortlist indicator
@@ -2605,13 +2667,16 @@ document.addEventListener('click', function(e) {
       const activeTab = document.querySelector('.nav-tabs .active, [role="tab"][aria-selected="true"]');
       if (activeTab) {
         const tabText = activeTab.textContent.trim().toUpperCase();
-        if (tabText.includes('OVERVIEW')) {
-          console.log('Switched to OVERVIEW tab, enhancing...');
+      if (tabText.includes('OVERVIEW')) {
+        console.log('Switched to OVERVIEW tab');
+        if (uiEnhancementsEnabled) {
+          console.log('UI enhancements enabled, enhancing modal...');
           enhanceModal();
-        } else {
-          console.log('Switched to non-OVERVIEW tab, cleaning up enhancements...');
-          cleanupEnhancements();
         }
+      } else {
+        console.log('Switched to non-OVERVIEW tab, cleaning up enhancements...');
+        cleanupEnhancements();
+      }
         // Always update shortlist indicator regardless of tab
         updateShortlistIndicator();
       }
@@ -2629,8 +2694,8 @@ function createFloatingButton() {
   button.innerHTML = '📋 Open Jobs';
   button.style.cssText = `
     position: fixed;
-    bottom: 30px;
-    right: 200px;
+    bottom: 5px;
+    right: 300px;
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border: none;
@@ -2722,23 +2787,29 @@ function setupModalObserver() {
             // IMMEDIATELY update shortlist indicator to prevent FOUC
             updateShortlistIndicator();
             
-            // Show modal after star is added
-            requestAnimationFrame(() => {
-              modal.style.opacity = '1';
-              modal.style.visibility = 'visible';
-            });
-            
-            // Only enhance if not already enhanced and on OVERVIEW tab
-            if (!modal.dataset.wwEnhanced) {
-              setTimeout(() => {
-                const tabPanel = modal.querySelector('[role="tabpanel"]');
-                if (tabPanel && tabPanel.querySelector('div[id^="panel_"]')) {
-                  enhanceModal();
-                } else {
-                  // If content not ready, wait a bit more
-                  setTimeout(enhanceModal, 100);
-                }
-              }, 25);
+            // CRITICAL FIX: Only manipulate modal visibility if UI enhancements are ON
+            if (uiEnhancementsEnabled) {
+              // Show modal after star is added (UI enhancements ON)
+              requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                modal.style.visibility = 'visible';
+              });
+              
+              // Only enhance if not already enhanced and on OVERVIEW tab
+              if (!modal.dataset.wwEnhanced) {
+            setTimeout(() => {
+              const tabPanel = modal.querySelector('[role="tabpanel"]');
+              if (tabPanel && tabPanel.querySelector('div[id^="panel_"]')) {
+                enhanceModal();
+              } else {
+                // If content not ready, wait a bit more
+                setTimeout(enhanceModal, 100);
+              }
+                }, 10);
+              }
+            } else {
+              // UI enhancements OFF - DO NOT touch modal styles!
+              console.log('UI enhancements OFF - leaving modal untouched');
             }
           }
         }
@@ -2752,40 +2823,251 @@ function setupModalObserver() {
   });
 }
 
+// Create the toggle UI for enabling/disabling UI enhancements
+function createToggleUI() {
+  try {
+    console.log('Creating toggle UI...');
+    
+    // Remove any existing toggle first
+    const existing = document.getElementById('ww-toggle-container');
+    if (existing) {
+      existing.remove();
+      console.log('Removed existing toggle');
+    }
+    
+    // Wait for body if not ready
+    if (!document.body) {
+      console.log('Body not ready, waiting...');
+      setTimeout(createToggleUI, 100);
+      return;
+    }
+    
+    const toggleContainer = document.createElement('div');
+  toggleContainer.id = 'ww-toggle-container';
+  toggleContainer.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    z-index: 999999;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.3s ease;
+  `;
+  
+  // Create label
+  const label = document.createElement('span');
+  label.textContent = 'UI Enhancements';
+  label.style.cssText = `
+    font-weight: 500;
+    user-select: none;
+  `;
+  
+  // Create toggle switch
+  const toggleSwitch = document.createElement('label');
+  toggleSwitch.style.cssText = `
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+  `;
+  
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = uiEnhancementsEnabled;
+  checkbox.style.cssText = `
+    opacity: 0;
+    width: 0;
+    height: 0;
+  `;
+  
+  const slider = document.createElement('span');
+  slider.style.cssText = `
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: ${uiEnhancementsEnabled ? '#4CAF50' : '#ccc'};
+    transition: 0.3s;
+    border-radius: 24px;
+  `;
+  
+  const sliderButton = document.createElement('span');
+  sliderButton.style.cssText = `
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: ${uiEnhancementsEnabled ? '27px' : '3px'};
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  `;
+  
+  slider.appendChild(sliderButton);
+  toggleSwitch.appendChild(checkbox);
+  toggleSwitch.appendChild(slider);
+  
+  // Add event listener
+  checkbox.addEventListener('change', function() {
+    uiEnhancementsEnabled = this.checked;
+    saveUIPreference();
+    
+    // Update visual state
+    slider.style.backgroundColor = uiEnhancementsEnabled ? '#4CAF50' : '#ccc';
+    sliderButton.style.left = uiEnhancementsEnabled ? '27px' : '3px';
+    
+    // Show notification
+    const message = uiEnhancementsEnabled ? 
+      'UI Enhancements enabled - Modal will be enhanced' : 
+      'UI Enhancements disabled - Using default modal';
+    showNotification(message, 'info');
+    
+    // Update modal hiding styles based on new state
+    preHideModal();
+    
+    // If modal is currently open and enhancements were just enabled, enhance it
+    if (uiEnhancementsEnabled && isModalOpen()) {
+      setTimeout(enhanceModal, 100);
+    }
+    // If modal is currently open and enhancements were just disabled, clean up
+    else if (!uiEnhancementsEnabled && isModalOpen()) {
+      cleanupEnhancements();
+      // Restore modal to default visibility
+      const modal = document.querySelector('div[data-v-70e7ded6-s]');
+      if (modal) {
+        modal.style.opacity = '';
+        modal.style.visibility = '';
+        const tabPanel = modal.querySelector('[role="tabpanel"]');
+        if (tabPanel) {
+          tabPanel.style.opacity = '';
+          tabPanel.style.visibility = '';
+          tabPanel.classList.remove('ww-ready');
+        }
+      }
+    }
+  });
+  
+  // Add info text
+  const infoText = document.createElement('span');
+  infoText.style.cssText = `
+    font-size: 11px;
+    color: #666;
+    margin-left: 8px;
+  `;
+
+  // Assemble the toggle UI
+  toggleContainer.appendChild(label);
+  toggleContainer.appendChild(toggleSwitch);
+  toggleContainer.appendChild(infoText);
+  
+  // Add to page
+  document.body.appendChild(toggleContainer);
+  console.log('✓ Toggle UI created successfully');
+  
+  } catch (e) {
+    console.error('❌ Failed to create toggle UI:', e);
+    console.error('Stack trace:', e.stack);
+    
+    // Try a simpler version as fallback
+    try {
+      const simple = document.createElement('div');
+      simple.innerHTML = `
+        <div style="position: fixed; top: 10px; right: 20px; z-index: 999999; 
+                    background: white; border: 1px solid #ddd; padding: 10px; 
+                    border-radius: 5px; font-size: 12px;">
+          WW Navigator Active
+        </div>
+      `;
+      document.body.appendChild(simple.firstElementChild);
+      console.log('Added simple status indicator as fallback');
+    } catch (e2) {
+      console.error('Even fallback failed:', e2);
+    }
+  }
+}
+
 // Initialize
 function initialize() {
-  console.log("Initializing WaterlooWorks Navigator v43...");
+  console.log("Initializing WaterlooWorks Navigator v47.1...");
   
-  // CRITICAL: Inject CSS immediately to prevent FOUC
-  injectStarStyles();
+  try {
+    // CRITICAL: Inject CSS immediately to prevent FOUC
+    injectStarStyles();
+    console.log("✓ Styles injected");
+  } catch (e) {
+    console.error('Failed to inject styles:', e);
+  }
   
+  try {
   loadPreferences();
+    console.log("✓ Preferences loaded");
+  } catch (e) {
+    console.error('Failed to load preferences:', e);
+  }
   
-  // Setup instant modal detection
+  // Ensure toggle UI is created once page is ready
+  const createToggleWhenReady = () => {
+    if (document.body) {
+      createToggleUI();
+    } else {
+      setTimeout(createToggleWhenReady, 100);
+    }
+  };
+  createToggleWhenReady();
+  
+  // Setup modal observer
+  try {
   setupModalObserver();
   preHideModal();
+    console.log("✓ Modal observer setup");
+  } catch (e) {
+    console.error('Failed to setup modal observer:', e);
+  }
   
-  // Give the page a moment to fully load, then add stars
+  // Setup job table features after delay
   setTimeout(() => {
-    console.log('Attempting to add stars to table rows...');
+    try {
+      console.log('Setting up job table features...');
+      
+      // Only try to add stars if we're on a page with jobs
+      if (window.location.href.includes('/postings') || 
+          window.location.href.includes('/jobs') ||
+          document.querySelector('table')) {
     getAllJobLinks();
+        setupTableObserver();
+        setupSidePanelObserver();
+      } else {
+        console.log('Not on a job listing page, skipping table features');
+      }
+    } catch (e) {
+      console.error('Error setting up table features:', e);
+    }
     
-    // Watch for table changes after initial load
-    setupTableObserver();
-    
-    // Watch for side panel changes (bulk shortlist operations)
-    setupSidePanelObserver();
-    
-    // Note: We DON'T sync based on folder icons because:
-    // - Folder icon just means job is in ANY folder, not specifically shortlist
-    // - Jobs can be in multiple folders
-    // - Our local state is the source of truth for the shortlist folder
-    
+    // Setup navigation buttons
+    try {
     createFloatingButton();
     createStatusIndicator();
-    console.log(`✅ Ready! WaterlooWorks shortlist integration active`);
-    console.log(`Tracking ${shortlistedJobs.size} shortlisted jobs`);
-  }, 500); // Small delay to ensure page is ready
+    } catch (e) {
+      console.error('Error creating buttons:', e);
+    }
+    
+    console.log('✅ WaterlooWorks Navigator Ready!');
+    console.log(`- UI Enhancements: ${uiEnhancementsEnabled ? 'Enabled' : 'Disabled'}`);
+    console.log(`- Shortlisted Jobs: ${shortlistedJobs.size}`);
+  }, 2000); // Give page time to load
 }
 
 // Inject CSS early to prevent layout shift and FOUC
@@ -2837,6 +3119,42 @@ function injectStarStyles() {
     /* Prevent layout shift in modal */
     div[data-v-70e7ded6-s] {
       min-height: 100px; /* Prevent collapse while loading */
+    }
+    
+    /* Make modal and all parent containers wider */
+    .modal-dialog {
+      max-width: 90% !important;
+      width: 1400px !important;
+      margin: 30px auto !important;
+    }
+    
+    div[data-v-70e7ded6-s] {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    
+    .modal-content {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    
+    /* Ensure tab panels use full width */
+    div[data-v-70e7ded6-s] [role="tabpanel"] {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    
+    /* Make sure the modal body uses full width */
+    .modal-body {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 15px !important;
+    }
+    
+    /* Ensure posting details use full width */
+    .posting-details {
+      max-width: 100% !important;
+      width: 100% !important;
     }
   `;
   
@@ -2989,10 +3307,53 @@ function setupSidePanelObserver() {
   console.log('✅ Side panel observer ready - will track bulk shortlist operations');
 }
 
+// Show that extension is loading immediately
+console.log("🚀 WaterlooWorks Navigator starting...");
+
+// Add a visual indicator that extension is active (temporary)
+try {
+  const loadingIndicator = document.createElement('div');
+  loadingIndicator.id = 'ww-loading-indicator';
+  loadingIndicator.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 999999;
+    transition: opacity 0.3s;
+  `;
+  loadingIndicator.textContent = 'WW Navigator Loading...';
+  
+  // Add to page when ready
+  const addIndicator = () => {
+    if (document.body) {
+      document.body.appendChild(loadingIndicator);
+      // Remove after 3 seconds
+      setTimeout(() => {
+        loadingIndicator.style.opacity = '0';
+        setTimeout(() => loadingIndicator.remove(), 300);
+      }, 3000);
+    } else {
+      setTimeout(addIndicator, 10);
+    }
+  };
+  addIndicator();
+} catch (e) {
+  console.error('Could not add loading indicator:', e);
+}
+
+// Start initialization
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
 } else {
-  initialize();
+  // Add a small delay to ensure Vue.js has rendered
+  setTimeout(initialize, 100);
 }
 
-console.log("WaterlooWorks Navigator v43.0 loaded - Complete Content Fix!");
+console.log("WaterlooWorks Navigator v47.1 loaded!");
+
+})(); // End of IIFE
