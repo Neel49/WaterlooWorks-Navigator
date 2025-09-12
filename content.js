@@ -2514,7 +2514,7 @@ function openJob(index) {
       });
       jobLinks[index].dispatchEvent(event);
       // Enhancement will be triggered by MutationObserver
-    }, 300);
+    }, 100);
   } else {
     // Simulate click event instead of calling click()
     const event = new MouseEvent('click', {
