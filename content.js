@@ -95,14 +95,14 @@ function loadPreferences() {
         if (typeof id === 'string' && id.startsWith('job_')) {
           return id.substring(4); // Remove "job_" prefix
         }
-        return id;
+        return String(id); // Ensure all IDs are strings
       }).filter(id => /^\d+$/.test(String(id))); // Only keep pure numbers
       
-      shortlistedJobs = new Set(cleanedJobs);
-      console.log(`Loaded ${shortlistedJobs.size} shortlisted jobs from localStorage`);
+      shortlistedJobs = new Set(cleanedJobs.map(String)); // Ensure all are strings
+      console.log(`Loaded ${shortlistedJobs.size} shortlisted jobs from localStorage: ${Array.from(shortlistedJobs).join(', ')}`);
       
       // Save cleaned version if we made changes
-      if (cleanedJobs.length !== parsed.length || cleanedJobs.some((id, i) => id !== parsed[i])) {
+      if (cleanedJobs.length !== parsed.length || cleanedJobs.some((id, i) => String(id) !== String(parsed[i]))) {
         console.log(`Cleaned up job ID format`);
         saveShortlist();
       }
@@ -203,6 +203,9 @@ function addStarToTableRow(row) {
     return;
   }
   
+  // Debug: Log checking status
+  console.log(`Checking job ${jobId} against shortlist (${shortlistedJobs.size} total jobs)`);
+  
   // Check if star already exists for this specific job ID
   if (row.querySelector(`.ww-row-star[data-job-id="${jobId}"]`)) {
     console.log(`Star already exists for job ${jobId}`);
@@ -252,13 +255,14 @@ function addStarToTableRow(row) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Toggle in our tracking
-    if (shortlistedJobs.has(jobId)) {
-      shortlistedJobs.delete(jobId);
+    // Toggle in our tracking (ensure jobId is a string)
+    const jobIdStr = String(jobId);
+    if (shortlistedJobs.has(jobIdStr)) {
+      shortlistedJobs.delete(jobIdStr);
       star.innerHTML = '☆';
       star.title = 'Add to shortlist';
     } else {
-      shortlistedJobs.add(jobId);
+      shortlistedJobs.add(jobIdStr);
       star.innerHTML = '⭐';
       star.title = 'Remove from shortlist';
     }
@@ -318,8 +322,8 @@ function getJobIdFromRow(row) {
   // Method 1: Look for checkbox with job ID as value
   const checkbox = row.querySelector('input[type="checkbox"][name="dataViewerSelection"]');
   if (checkbox && checkbox.value) {
-    console.log(`Found job ID from checkbox: ${checkbox.value}`);
-    return checkbox.value; // This is the actual job ID like "435669"
+    console.log(`Found job ID from checkbox: ${checkbox.value}, type: ${typeof checkbox.value}`);
+    return String(checkbox.value); // Ensure it's a string
   }
   
   // Method 2: Look for job ID in the first column
@@ -330,8 +334,8 @@ function getJobIdFromRow(row) {
     for (const span of spans) {
       const text = span.textContent.trim();
       if (/^\d{6}$/.test(text)) {
-        console.log(`Found job ID from span: ${text}`);
-        return text;
+        console.log(`Found job ID from span: ${text}, type: ${typeof text}`);
+        return String(text); // Ensure it's a string
       }
     }
   }
@@ -340,11 +344,12 @@ function getJobIdFromRow(row) {
   const rowText = row.textContent;
   const match = rowText.match(/\b\d{6}\b/);
   if (match) {
-    console.log(`Found job ID from row text: ${match[0]}`);
-    return match[0];
+    console.log(`Found job ID from row text: ${match[0]}, type: ${typeof match[0]}`);
+    return String(match[0]); // Ensure it's a string
   }
   
   console.log('Could not find job ID in row');
+  console.log('Row HTML sample:', row.innerHTML.substring(0, 500));
   return null;
 }
 
@@ -353,7 +358,7 @@ function getCurrentJobId() {
   // CRITICAL: Use the stored job ID from when the modal was opened
   if (currentModalJobId) {
     console.log(`Using stored modal job ID: ${currentModalJobId}`);
-    return currentModalJobId;
+    return String(currentModalJobId); // Ensure it's a string
   }
   
   // Fallback: If somehow we don't have the stored ID, try to get it from current index
@@ -362,9 +367,10 @@ function getCurrentJobId() {
     if (row) {
       const id = getJobIdFromRow(row);
       if (id) {
-        console.log(`Using job ID from current index ${currentJobIndex}: ${id}`);
-        currentModalJobId = id; // Store it for future use
-        return id;
+        const idStr = String(id);
+        console.log(`Using job ID from current index ${currentJobIndex}: ${idStr}`);
+        currentModalJobId = idStr; // Store it for future use as string
+        return idStr;
       }
     }
   }
@@ -774,12 +780,13 @@ async function toggleShortlist() {
     console.log('WARNING: Save button not found');
   }
   
-  // Update our tracking
+  // Update our tracking (ensure jobId is a string)
+  const jobIdStr = String(jobId);
   if (isCurrentlyShortlisted) {
-    shortlistedJobs.delete(jobId);
+    shortlistedJobs.delete(jobIdStr);
     showNotification('Removed from WaterlooWorks shortlist', 'remove');
   } else {
-    shortlistedJobs.add(jobId);
+    shortlistedJobs.add(jobIdStr);
     showNotification('Added to WaterlooWorks shortlist', 'add');
   }
   
@@ -2499,8 +2506,8 @@ function openJob(index) {
   if (row) {
     const jobId = getJobIdFromRow(row);
     if (jobId) {
-      currentModalJobId = jobId;
-      console.log(`Opening job ${index + 1}/${jobLinks.length}, ID: ${jobId}`);
+      currentModalJobId = String(jobId); // Ensure it's a string
+      console.log(`Opening job ${index + 1}/${jobLinks.length}, ID: ${currentModalJobId}`);
     } else {
       console.log(`WARNING: Could not get job ID for index ${index}`);
     }
@@ -3007,7 +3014,7 @@ function createToggleUI() {
 
 // Initialize
 function initialize() {
-  console.log("Initializing WaterlooWorks Navigator v47.2...");
+  console.log("Initializing WaterlooWorks Navigator v47.3...");
   
   try {
     // CRITICAL: Inject CSS immediately to prevent FOUC
@@ -3277,7 +3284,7 @@ function setupSidePanelObserver() {
             checkboxes.forEach(checkbox => {
               const jobId = checkbox.value;
               if (jobId) {
-                selectedJobsBeforePanel.add(jobId);
+                selectedJobsBeforePanel.add(String(jobId)); // Ensure it's a string
               }
             });
             
@@ -3302,12 +3309,13 @@ function setupSidePanelObserver() {
                     
                     // Update our local state immediately
                     selectedJobsBeforePanel.forEach(jobId => {
+                      const jobIdStr = String(jobId); // Ensure it's a string
                       if (shortlistCheckboxState) {
-                        shortlistedJobs.add(jobId);
-                        console.log(`✅ Added job ${jobId} to shortlist`);
+                        shortlistedJobs.add(jobIdStr);
+                        console.log(`✅ Added job ${jobIdStr} to shortlist`);
                       } else {
-                        shortlistedJobs.delete(jobId);
-                        console.log(`❌ Removed job ${jobId} from shortlist`);
+                        shortlistedJobs.delete(jobIdStr);
+                        console.log(`❌ Removed job ${jobIdStr} from shortlist`);
                       }
                     });
                     
@@ -3385,6 +3393,6 @@ if (document.readyState === 'loading') {
   setTimeout(initialize, 100);
 }
 
-console.log("WaterlooWorks Navigator v47.2 loaded!");
+console.log("WaterlooWorks Navigator v47.3 loaded!");
 
 })(); // End of IIFE
