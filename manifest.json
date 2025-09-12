@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WaterlooWorks Job Navigator",
-  "version": "47.3",
+  "version": "49.0",
   "description": "Navigate job postings with arrow keys and shortlist jobs on WaterlooWorks",
   "permissions": ["activeTab"],
   "content_scripts": [

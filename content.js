@@ -89,7 +89,11 @@ function loadPreferences() {
     // Load shortlisted jobs
     const savedShortlist = localStorage.getItem('ww-navigator-shortlist');
     if (savedShortlist) {
+      console.log('=== LOADING SHORTLIST FROM LOCALSTORAGE ===');
+      console.log('Raw saved data:', savedShortlist);
       const parsed = JSON.parse(savedShortlist);
+      console.log('Parsed data:', parsed);
+      
       // Convert old format (job_XXXXX) to new format (just XXXXX)
       const cleanedJobs = parsed.map(id => {
         if (typeof id === 'string' && id.startsWith('job_')) {
@@ -98,14 +102,18 @@ function loadPreferences() {
         return String(id); // Ensure all IDs are strings
       }).filter(id => /^\d+$/.test(String(id))); // Only keep pure numbers
       
+      console.log('Cleaned jobs:', cleanedJobs);
       shortlistedJobs = new Set(cleanedJobs.map(String)); // Ensure all are strings
       console.log(`Loaded ${shortlistedJobs.size} shortlisted jobs from localStorage: ${Array.from(shortlistedJobs).join(', ')}`);
+      console.log('==========================================');
       
       // Save cleaned version if we made changes
       if (cleanedJobs.length !== parsed.length || cleanedJobs.some((id, i) => String(id) !== String(parsed[i]))) {
         console.log(`Cleaned up job ID format`);
         saveShortlist();
       }
+    } else {
+      console.log('No saved shortlist found in localStorage');
     }
     
     // Load UI enhancement preference
@@ -140,6 +148,11 @@ function savePreferences() {
 // Get all job links and add stars to table rows
 function getAllJobLinks() {
   console.log('Getting all job links...');
+  
+  // CRITICAL DEBUG: Log what's in shortlistedJobs
+  console.log('=== SHORTLIST DEBUG ===');
+  console.log(`shortlistedJobs contains ${shortlistedJobs.size} items:`, Array.from(shortlistedJobs));
+  console.log('======================');
   
   // Try multiple selectors - WaterlooWorks uses Vue.js with dynamic attributes
   const selectors = [
@@ -178,19 +191,43 @@ function getAllJobLinks() {
   console.log(`Total job links found: ${jobLinks.length}`);
   
   // Clear ALL existing stars first (prevents duplicates on pagination)
-  document.querySelectorAll('.ww-row-star').forEach(star => star.remove());
-  console.log('Cleared all existing stars');
+  // Use multiple selectors to ensure we catch all stars
+  const allStars = document.querySelectorAll('.ww-row-star, span[data-job-id], [class*="star"]');
+  console.log(`Found ${allStars.length} stars to clear`);
+  allStars.forEach(star => {
+    if (star.className && star.className.includes('ww-row-star')) {
+      star.remove();
+    }
+  });
+  
+  // Double-check by clearing from table rows directly
+  document.querySelectorAll('tbody tr').forEach(row => {
+    const star = row.querySelector('.ww-row-star');
+    if (star) star.remove();
+  });
+  
+  console.log('✅ Cleared all existing stars');
   
   // Add fresh stars to each table row
+  console.log('=== ADDING STARS TO ROWS ===');
   links.forEach((link, index) => {
     const row = link.closest('tr');
     if (row) {
-      console.log(`Adding star to row ${index + 1}`);
+      const jobId = getJobIdFromRow(row);
+      // Get the job title for debugging
+      const titleText = link.textContent || 'Unknown';
+      console.log(`Row ${index + 1}: "${titleText}" -> Job ID = ${jobId}`);
+      
+      // Check if this job should have a star
+      const shouldHaveStar = shortlistedJobs.has(String(jobId));
+      console.log(`  -> Should have star? ${shouldHaveStar} (checking "${jobId}" in Set)`);
+      
       addStarToTableRow(row);
     } else {
       console.log(`Warning: No row found for link ${index + 1}`);
     }
   });
+  console.log('============================');
   
   return jobLinks;
 }
@@ -203,8 +240,19 @@ function addStarToTableRow(row) {
     return;
   }
   
-  // Debug: Log checking status
-  console.log(`Checking job ${jobId} against shortlist (${shortlistedJobs.size} total jobs)`);
+  // Simple debug
+  const jobIdStr = String(jobId);
+  const isInSet = shortlistedJobs.has(jobIdStr);
+  
+  // Special check for problematic job
+  if (jobIdStr === "436327") {
+    console.log(`🚨 PROBLEM JOB 436327 DETECTED!`);
+    console.log(`  Current shortlist:`, Array.from(shortlistedJobs));
+    console.log(`  Is 436327 in shortlist? ${shortlistedJobs.has("436327")}`);
+    console.log(`  Row HTML:`, row.innerHTML.substring(0, 300));
+  }
+  
+  console.log(`Star check: Job ${jobIdStr} -> ${isInSet ? '⭐ YES' : '☆ NO'}`);
   
   // Check if star already exists for this specific job ID
   if (row.querySelector(`.ww-row-star[data-job-id="${jobId}"]`)) {
@@ -212,8 +260,31 @@ function addStarToTableRow(row) {
     return;
   }
   
-  const isShortlisted = shortlistedJobs.has(jobId);
-  console.log(`Job ${jobId} shortlisted status: ${isShortlisted}`);
+  const isShortlisted = shortlistedJobs.has(jobIdStr);
+  
+  // Extra debugging for problem cases
+  if (jobIdStr === "436327" || isShortlisted !== isInSet) {
+    console.log(`⚠️ DETAILED CHECK for Job ${jobIdStr}:`);
+    console.log(`  jobIdStr type: ${typeof jobIdStr}`);
+    console.log(`  isInSet: ${isInSet}`);
+    console.log(`  isShortlisted: ${isShortlisted}`);
+    console.log(`  shortlistedJobs.has(jobIdStr): ${shortlistedJobs.has(jobIdStr)}`);
+    console.log(`  shortlistedJobs.has("436327"): ${shortlistedJobs.has("436327")}`);
+    
+    // Check if there's any similar ID in the set
+    let found = false;
+    shortlistedJobs.forEach(id => {
+      if (id.includes("436") || jobIdStr.includes(id) || id.includes(jobIdStr)) {
+        console.log(`  Found similar ID in set: "${id}"`);
+        found = true;
+      }
+    });
+    if (!found) {
+      console.log(`  No similar IDs found in set`);
+    }
+  }
+  
+  console.log(`FINAL DECISION: Job ${jobIdStr} shortlisted = ${isShortlisted}`);
   
   // Find the job title cell - try multiple selectors
   let titleLink = row.querySelector('td a.overflow--ellipsis');
@@ -251,24 +322,38 @@ function addStarToTableRow(row) {
   `;
   
   star.addEventListener('click', async (e) => {
-    console.log(`Star clicked for job ${jobId}`);
+    console.log(`=== STAR CLICKED ===`);
+    console.log(`Job ID: ${jobId}`);
+    console.log(`Type: ${typeof jobId}`);
     e.preventDefault();
     e.stopPropagation();
     
     // Toggle in our tracking (ensure jobId is a string)
     const jobIdStr = String(jobId);
+    console.log(`Converting to string: "${jobIdStr}"`);
+    
+    // Special check for problem job
+    if (jobIdStr === "436327") {
+      console.log(`🚨 USER CLICKED ON PROBLEM JOB 436327!`);
+      console.log(`Before click - Is in shortlist? ${shortlistedJobs.has(jobIdStr)}`);
+    }
+    
     if (shortlistedJobs.has(jobIdStr)) {
+      console.log(`REMOVING job ${jobIdStr} from shortlist`);
       shortlistedJobs.delete(jobIdStr);
       star.innerHTML = '☆';
       star.title = 'Add to shortlist';
     } else {
+      console.log(`ADDING job ${jobIdStr} to shortlist`);
       shortlistedJobs.add(jobIdStr);
       star.innerHTML = '⭐';
       star.title = 'Remove from shortlist';
     }
     
+    console.log(`shortlistedJobs now contains:`, Array.from(shortlistedJobs));
     saveShortlist();
-    console.log(`Toggled shortlist for job ${jobId} from table row`);
+    console.log(`Saved to localStorage`);
+    console.log(`===================`);
     
     // If modal is open for this job, update its star too
     if (getCurrentJobId() === jobId) {
@@ -302,7 +387,7 @@ function updateTableRowStars() {
       // Find the star for this specific job ID
       const star = row.querySelector(`.ww-row-star[data-job-id="${jobId}"]`);
       if (star) {
-        const isShortlisted = shortlistedJobs.has(jobId);
+        const isShortlisted = shortlistedJobs.has(String(jobId)); // CRITICAL: Convert to string!
         star.innerHTML = isShortlisted ? '⭐' : '☆';
         star.title = isShortlisted ? 'Remove from shortlist' : 'Add to shortlist';
         // Update inline color to ensure visibility
@@ -319,11 +404,20 @@ function isModalOpen() {
 
 // Get job ID from the clicked row (from table)
 function getJobIdFromRow(row) {
+  // Check if this row contains "Coding Instructor"
+  if (row.textContent.includes("Coding Instructor")) {
+    console.log(`🔍 FOUND ROW WITH "Coding Instructor"`);
+    console.log(`Row HTML:`, row.innerHTML.substring(0, 600));
+  }
+  
   // Method 1: Look for checkbox with job ID as value
   const checkbox = row.querySelector('input[type="checkbox"][name="dataViewerSelection"]');
   if (checkbox && checkbox.value) {
-    console.log(`Found job ID from checkbox: ${checkbox.value}, type: ${typeof checkbox.value}`);
-    return String(checkbox.value); // Ensure it's a string
+    const id = String(checkbox.value);
+    if (row.textContent.includes("Coding Instructor")) {
+      console.log(`🔍 Coding Instructor row -> Extracted ID from checkbox: "${id}"`);
+    }
+    return id;
   }
   
   // Method 2: Look for job ID in the first column
@@ -334,8 +428,11 @@ function getJobIdFromRow(row) {
     for (const span of spans) {
       const text = span.textContent.trim();
       if (/^\d{6}$/.test(text)) {
-        console.log(`Found job ID from span: ${text}, type: ${typeof text}`);
-        return String(text); // Ensure it's a string
+        const id = String(text);
+        if (row.textContent.includes("Coding Instructor")) {
+          console.log(`🔍 Coding Instructor row -> Extracted ID from span: "${id}"`);
+        }
+        return id;
       }
     }
   }
@@ -344,12 +441,15 @@ function getJobIdFromRow(row) {
   const rowText = row.textContent;
   const match = rowText.match(/\b\d{6}\b/);
   if (match) {
-    console.log(`Found job ID from row text: ${match[0]}, type: ${typeof match[0]}`);
-    return String(match[0]); // Ensure it's a string
+    const id = String(match[0]);
+    if (row.textContent.includes("Coding Instructor")) {
+      console.log(`🔍 Coding Instructor row -> Extracted ID from regex: "${id}"`);
+    }
+    return id;
   }
   
-  console.log('Could not find job ID in row');
-  console.log('Row HTML sample:', row.innerHTML.substring(0, 500));
+  console.log('ERROR: Could not find job ID in row');
+  console.log('Row HTML (first 500 chars):', row.innerHTML.substring(0, 500));
   return null;
 }
 
@@ -382,8 +482,10 @@ function getCurrentJobId() {
 // Save shortlisted jobs to localStorage
 function saveShortlist() {
   try {
-    localStorage.setItem('ww-navigator-shortlist', JSON.stringify(Array.from(shortlistedJobs)));
-    console.log(`Saved ${shortlistedJobs.size} shortlisted jobs to localStorage`);
+    // Ensure all IDs are strings before saving
+    const jobsArray = Array.from(shortlistedJobs).map(id => String(id));
+    localStorage.setItem('ww-navigator-shortlist', JSON.stringify(jobsArray));
+    console.log(`Saved ${shortlistedJobs.size} shortlisted jobs to localStorage:`, jobsArray);
   } catch (e) {
     console.error('Error saving shortlist:', e);
   }
@@ -548,8 +650,8 @@ async function toggleShortlist() {
     return;
   }
   
-  // Check if currently shortlisted
-  const isCurrentlyShortlisted = shortlistedJobs.has(jobId);
+  // Check if currently shortlisted (CRITICAL: Convert to string!)
+  const isCurrentlyShortlisted = shortlistedJobs.has(String(jobId));
   
   // CRITICAL: The folder button is in the TABLE ROW, not the modal!
   console.log('Looking for folder button in the table row...');
@@ -808,7 +910,7 @@ function updateShortlistIndicator() {
     return;
   }
   
-  const isShortlisted = shortlistedJobs.has(jobId);
+  const isShortlisted = shortlistedJobs.has(String(jobId)); // CRITICAL: Convert to string!
   console.log(`Updating star for job ${jobId}: ${isShortlisted ? '⭐ SHORTLISTED' : '☆ NOT SHORTLISTED'}`);
   
   // Debug: Show all currently shortlisted jobs
@@ -858,7 +960,7 @@ function updateShortlistIndicator() {
       
       starButton.addEventListener('mouseenter', () => {
         starButton.style.transform = 'scale(1.15) rotate(10deg)';
-        if (shortlistedJobs.has(jobId)) { // Check current state
+        if (shortlistedJobs.has(String(jobId))) { // Check current state (convert to string!)
           starButton.style.boxShadow = '0 5px 20px rgba(255, 215, 0, 0.6)';
         } else {
           starButton.style.boxShadow = '0 4px 15px rgba(0,0,0,0.25)';
@@ -867,7 +969,7 @@ function updateShortlistIndicator() {
       
       starButton.addEventListener('mouseleave', () => {
         starButton.style.transform = 'scale(1) rotate(0deg)';
-        if (shortlistedJobs.has(jobId)) { // Check current state
+        if (shortlistedJobs.has(String(jobId))) { // Check current state (convert to string!)
           starButton.style.boxShadow = '0 3px 15px rgba(255, 215, 0, 0.4)';
         } else {
           starButton.style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)';
@@ -3014,7 +3116,7 @@ function createToggleUI() {
 
 // Initialize
 function initialize() {
-  console.log("Initializing WaterlooWorks Navigator v47.3...");
+  console.log("Initializing WaterlooWorks Navigator v49.0...");
   
   try {
     // CRITICAL: Inject CSS immediately to prevent FOUC
@@ -3062,6 +3164,7 @@ function initialize() {
     getAllJobLinks();
         setupTableObserver();
         setupSidePanelObserver();
+        setupPaginationObserver();
       } else {
         console.log('Not on a job listing page, skipping table features');
       }
@@ -3226,11 +3329,13 @@ function setupTableObserver() {
       // Do a full refresh which will clear old stars and add new ones
       clearTimeout(window.tableUpdateTimeout);
       window.tableUpdateTimeout = setTimeout(() => {
+        console.log('🔄 Full table refresh triggered');
         getAllJobLinks();
         console.log('Table fully refreshed after page change');
-      }, 50);
+      }, 100); // Slightly longer delay for table updates
     } else if (hasAddedRows && !hasRemovedRows) {
       // Just new rows added (like loading more), add stars only to new rows
+      console.log('New rows added to table');
       mutations.forEach(mutation => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach(node => {
@@ -3246,6 +3351,9 @@ function setupTableObserver() {
           });
         }
       });
+    } else if (hasRemovedRows && !hasAddedRows) {
+      // Rows removed but none added - might be clearing before update
+      console.log('Rows removed from table - waiting for new rows...');
     }
   });
   
@@ -3257,6 +3365,28 @@ function setupTableObserver() {
   });
   
   console.log('Table observer setup - watching for new rows');
+}
+
+// Watch for pagination clicks
+function setupPaginationObserver() {
+  console.log('Setting up pagination observer...');
+  
+  // Watch for clicks on pagination links
+  document.addEventListener('click', (e) => {
+    // Check if clicked element is a pagination link
+    const paginationLink = e.target.closest('.pagination__link');
+    if (paginationLink) {
+      console.log('📄 Pagination clicked - refreshing stars in 500ms');
+      
+      // Wait for the table to update, then refresh stars
+      setTimeout(() => {
+        console.log('📄 Refreshing stars after pagination...');
+        getAllJobLinks();
+      }, 500);
+    }
+  }, true);
+  
+  console.log('✅ Pagination observer ready');
 }
 
 // Watch for side panel changes to detect bulk operations
@@ -3393,6 +3523,6 @@ if (document.readyState === 'loading') {
   setTimeout(initialize, 100);
 }
 
-console.log("WaterlooWorks Navigator v47.3 loaded!");
+console.log("WaterlooWorks Navigator v49.0 loaded!");
 
 })(); // End of IIFE
